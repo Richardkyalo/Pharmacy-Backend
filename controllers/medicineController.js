@@ -2,45 +2,40 @@ const medicineModel = require('../models/medicineModel');
 const supplierModel = require('../models/supplierModel'); // Import the supplier model
 
 
-const createMedicine = async (name, description, supplier_id, quantity, price, expiration_date) => {
-  const query = `
-    INSERT INTO medicines (name, description, supplier_id, quantity, price, expiration_date)
-    VALUES ($1, $2, $3, $4, $5, $6)
-    RETURNING 
-      medicine_id,
+const createMedicine = async (req, res) => {
+  const { name, description, supplier_id, quantity, price, expiration_date } = req.body;
+
+  try {
+    // Create the medicine
+    const newMedicine = await medicineModel.createMedicine(
       name,
       description,
       supplier_id,
       quantity,
       price,
-      expiration_date,
-      created_at,
-      (SELECT json_build_object(
-          'supplier_id', s.supplier_id,
-          'name', s.name,
-          'contact_name', s.contact_name,
-          'contact_phone', s.contact_phone,
-          'contact_email', s.contact_email,
-          'address', s.address
-        ) AS supplier
-        FROM suppliers s
-        WHERE s.supplier_id = $3)
-      AS supplier_details
-  `;
-  
-  const values = [name, description, supplier_id, quantity, price, expiration_date];
-  
-  try {
-    const result = await db.query(query, values);
-    return result.rows[0];
-  } catch (error) {
-    throw new Error('Error creating medicine:', error);
+      expiration_date
+    );
+
+    // Fetch the supplier details
+    const supplierDetails = await supplierModel.getSupplierById(supplier_id);
+
+    // Combine medicine and supplier details
+    const response = {
+      ...newMedicine,
+      supplier: supplierDetails,
+    };
+
+    res.status(201).json(response);
+  } catch (err) {
+    console.error('Error creating medicine:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
+
 const getMedicines = async (req, res) => {
   try {
-    const medicines = await medicineModel.getMedicinesWithSupplierDetails();
+    const medicines = await medicineModel.getMedicines();
     res.status(200).json(medicines);
   } catch (err) {
     console.error('Error fetching medicines:', err);
@@ -53,7 +48,7 @@ const getMedicineById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const medicine = await medicineModel.getMedicineByIdWithSupplierDetails(id);
+    const medicine = await medicineModel.getMedicineById(id);
     if (!medicine) {
       return res.status(404).json({ error: 'Medicine not found' });
     }
@@ -70,7 +65,7 @@ const updateMedicine = async (req, res) => {
   const { name, description, supplier_id, quantity, price, expiration_date } = req.body;
 
   try {
-    const updatedMedicine = await medicineModel.updateMedicine(
+    const updatedMedicineRecord = await medicineModel.updateMedicine(
       id,
       name,
       description,
@@ -79,14 +74,10 @@ const updateMedicine = async (req, res) => {
       price,
       expiration_date
     );
-
-    // Fetch updated medicine with supplier details
-    const updatedMedicineWithSupplier = await medicineModel.getMedicineByIdWithSupplierDetails(id);
-
-    if (!updatedMedicineWithSupplier) {
+    if (!updatedMedicineRecord) {
       return res.status(404).json({ error: 'Medicine not found' });
     }
-    res.status(200).json(updatedMedicineWithSupplier);
+    res.status(200).json(updatedMedicineRecord);
   } catch (err) {
     console.error('Error updating medicine:', err);
     res.status(500).json({ error: 'Internal server error' });
