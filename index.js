@@ -8,6 +8,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const orderItemRoutes = require('./routes/orderItemRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoutes');
 const prescriptionItemRoutes = require('./routes/prescriptionItemRoutes');
+const cors = require('cors');
 
 
 const app = express();
@@ -16,6 +17,7 @@ const port = 3000;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use(cors());
 app.use('/auth', authRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/medicines', medicineRoutes);
