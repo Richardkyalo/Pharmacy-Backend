@@ -1,11 +1,19 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { createUser, findUserByEmail, getUsers, updateUser } = require('../models/userModels');
+const { createUser, findUserByUsername, findUserByEmail, getUsers, updateUser } = require('../models/userModels');
 require('dotenv').config();
 
 const register = async (req, res) => {
   const { username, password, email, role } = req.body;
   try {
+    const checkUser = await findUserByUsername(username);
+    if (checkUser){
+      return res.status(400).json({ error: 'Username already exists' });
+    } 
+    const checkUserEmail = await findUserByEmail(email);
+    if (checkUserEmail){
+      return res.status(400).json({ error: 'Email already exists' });
+    } 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await createUser(username,  hashedPassword, email, role);
     res.status(201).json(user); 
