@@ -8,6 +8,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const orderItemRoutes = require('./routes/orderItemRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoutes');
 const prescriptionItemRoutes = require('./routes/prescriptionItemRoutes');
+const pharmacyRoutes = require('./routes/phamarcyRoutes');
 const cors = require('cors');
 
 
@@ -26,6 +27,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/order-items', orderItemRoutes);
 app.use('/api/prescriptions', prescriptionRoutes);
 app.use('/api/prescription-items', prescriptionItemRoutes);
+app.use('/api/pharmacies', pharmacyRoutes)
 
 
 
